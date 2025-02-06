@@ -2,6 +2,8 @@ import express from "express"
 import cors from "cors"
 import { connectDB } from "./config/db.js"
 import userRouter from "./routes/userRoute.js"
+import teacherRouter from "./routes/teacherRoute.js"
+import courseRouter from "./routes/courseRoute.js"
 import 'dotenv/config' 
 
 
@@ -18,6 +20,8 @@ connectDB();
 
 // api endpoints
 app.use("/api/user", userRouter)
+app.use("/api/teacher", teacherRouter)
+app.use("/api/courses", courseRouter)
 
 app.get("/", (req,res)=>{
     res.send("API Working")
