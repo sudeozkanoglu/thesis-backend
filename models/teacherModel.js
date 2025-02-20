@@ -25,6 +25,7 @@ const teacherSchema = new mongoose.Schema({
     {
       courseName: { type: String, required: true },
       courseCode: { type: String, required: true },
+      description: { type: String, required: true },
       exams: [{ type: String }] 
     }
   ],
@@ -36,6 +37,7 @@ const teacherSchema = new mongoose.Schema({
       endTime: { type: String, required: true },
     }
   ],
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "user" },
 });
 
 export default mongoose.models.teacher || mongoose.model("teacher", teacherSchema);

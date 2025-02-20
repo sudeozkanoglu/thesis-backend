@@ -18,9 +18,9 @@ const loginUser = async (req, res) => {
         if (!isMatch) {
             return res.json({success:false, message:"Invalid Credentials"});
         }
-
+        
         const token = createToken(user._id);
-        res.json({success:true, token, userType:user.userType});
+        res.json({success:true, token, userType:user.userType, userId:user._id});
     } catch (error) {
         res.json({success:false, message:"Error"});
     }
