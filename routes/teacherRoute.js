@@ -1,25 +1,21 @@
 import express from "express";
-import multer from "multer";
 
 import {
     addTeacher,
-    getTeachers,
-    getTeacherById,
-    getTeacherByUserId,
     updateTeacher,
-    deleteTeacher
+    deleteTeacher,
+    getTeacherById,
+    getTeachers,
+    getExamsByTeacher
 } from "../controllers/teacherController.js";
 
 const teacherRouter = express.Router();
 
-// Multer ayarları (Dosya yükleme için)
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-
-teacherRouter.post("/add", upload.single("photo"), addTeacher);         // Yeni öğretmen ekle
+teacherRouter.post("/add", addTeacher);         // Yeni öğretmen ekle
+teacherRouter.get("/:teacherId/exams", getExamsByTeacher); // Öğretmene ait sınavları getir
 teacherRouter.get("/", getTeachers);            // Tüm öğretmenleri getir
 teacherRouter.get("/:id", getTeacherById);      // Belirli bir öğretmeni getir
-teacherRouter.get("/user/:userId", getTeacherByUserId);
+// teacherRouter.get("/user/:userId", getTeacherByUserId);
 teacherRouter.put("/:id", updateTeacher);       // Öğretmeni güncelle
 teacherRouter.delete("/:id", deleteTeacher);    // Öğretmeni sil
 
