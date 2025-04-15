@@ -1,4 +1,7 @@
 import { Student } from "../models/userModel.js";
+import Course from "../models/courseModel.js";
+import Exam from "../models/examsModel.js";
+import ExamSubmission from "../models/examSubmissionModel.js";
 import bcrypt from "bcryptjs";
 
 // Tüm öğrencileri listeleme
@@ -91,4 +94,109 @@ const deleteStudent = async (req, res) => {
   }
 };
 
-export { getStudents, getStudentById, updateStudent, deleteStudent };
+const enrollInCourse = async (req, res) => {
+  const { studentId } = req.params;
+  const { courseId } = req.body;
+
+  try {
+    // Öğrenciyi ve dersi bul
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    // Öğrenci zaten kayıtlı mı?
+    if (student.courses.includes(courseId)) {
+      return res.status(400).json({ message: "Student is already enrolled in this course" });
+    }
+
+    // Kaydı ekle
+    student.courses.push(courseId);
+    await student.save();
+
+    return res.status(200).json({ message: "Enrollment successful", student });
+  } catch (error) {
+    console.error("Enrollment error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getStudentCourses = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const student = await Student.findById(studentId).populate(
+      "courses",
+      "courseName courseCode description"
+    );
+
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      courses: student.courses,
+    });
+  } catch (error) {
+    console.error("Error fetching student courses:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+const getExamsForStudent = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    // 1. Öğrenciyi bul ve kurslarını al
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ success: false, message: "Student not found" });
+    }
+
+    const courseIds = student.courses; // ObjectId[] listesi
+
+    if (!courseIds || courseIds.length === 0) {
+      return res.status(200).json({ success: true, exams: [] }); // hiç kurs yoksa boş dön
+    }
+
+    // 2. Bu kurslara ait sınavları al
+    const exams = await Exam.find({ course: { $in: courseIds } })
+      .populate("course", "courseName courseCode")
+      .populate("createdBy", "firstName lastName")
+      .populate("questions")
+      .sort({ examDate: 1 });
+
+    return res.status(200).json({ success: true, exams });
+  } catch (error) {
+    console.error("Error fetching student exams:", error);
+    return res.status(500).json({ success: false, message: "Error fetching exams", error: error.message });
+  }
+};
+
+const getStudentExamSubmissions = async (req, res) => {
+  const { studentId } = req.params;
+
+  try {
+    const submissions = await ExamSubmission.find({ student: studentId })
+      .populate({
+        path: "exam",
+        populate: {
+          path: "course",
+          select: "courseName courseCode",
+        },
+      });
+
+    res.status(200).json({ success: true, submissions });
+  } catch (error) {
+    console.error("Error fetching exam submissions:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch exam submissions" });
+  }
+};
+
+export { getStudents, getStudentById, updateStudent, deleteStudent, enrollInCourse, getStudentCourses, getExamsForStudent, getStudentExamSubmissions};
