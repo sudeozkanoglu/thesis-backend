@@ -76,8 +76,6 @@ const addTeacher = async (req, res) => {
   }
 };
 
-export { addTeacher };
-
 const updateTeacher = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,8 +154,6 @@ const updateTeacher = async (req, res) => {
   }
 };
 
-export { updateTeacher };
-
 const deleteTeacher = async (req, res) => {
   try {
     const { id } = req.params;
@@ -178,8 +174,6 @@ const deleteTeacher = async (req, res) => {
   }
 };
 
-export { deleteTeacher };
-
 const getTeachers = async (req, res) => {
   try {
     const teachers = await Teacher.find().populate(
@@ -193,15 +187,17 @@ const getTeachers = async (req, res) => {
   }
 };
 
-export { getTeachers };
-
 const getTeacherById = async (req, res) => {
   try {
     const { id } = req.params;
-    const teacher = await Teacher.findById(id).populate(
-      "courses",
-      "courseName courseCode description"
-    );
+    const teacher = await Teacher.findById(id).populate({
+      path: "courses",
+      select: "courseName courseCode description students",
+      populate: {
+        path: "students",
+        select: "_id",
+      },
+    });
     if (!teacher) {
       return res
         .status(404)
@@ -214,9 +210,7 @@ const getTeacherById = async (req, res) => {
   }
 };
 
-export { getTeacherById };
-
-export const getExamsByTeacher = async (req, res) => {
+const getExamsByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
 
@@ -245,12 +239,10 @@ export const getExamsByTeacher = async (req, res) => {
     ]);
 
     if (!exams || exams.length === 0) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "No exams found for this teacher's courses",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "No exams found for this teacher's courses",
+      });
     }
 
     // ✅ Step 4: Send response
@@ -266,4 +258,38 @@ export const getExamsByTeacher = async (req, res) => {
     console.error("Error fetching exams for teacher:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
+};
+
+const removeCourseFromTeacher = async (req, res) => {
+  try {
+    const { teacherId, courseId } = req.params;
+
+    const teacher = await Teacher.findById(teacherId);
+    if (!teacher) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Teacher not found" });
+    }
+
+    // Ders listesinden çıkar
+    teacher.courses = teacher.courses.filter((c) => c.toString() !== courseId);
+    await teacher.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Course removed from teacher." });
+  } catch (err) {
+    console.error("Error removing course from teacher:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export {
+  addTeacher,
+  updateTeacher,
+  deleteTeacher,
+  getTeachers,
+  getTeacherById,
+  getExamsByTeacher,
+  removeCourseFromTeacher,
 };

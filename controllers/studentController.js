@@ -7,7 +7,10 @@ import bcrypt from "bcryptjs";
 // Tüm öğrencileri listeleme
 const getStudents = async (req, res) => {
   try {
-    const students = await Student.find().populate("courses", "courseName courseCode description");
+    const students = await Student.find().populate(
+      "courses",
+      "courseName courseCode description"
+    );
     res.status(200).json({ success: true, students });
   } catch (error) {
     console.error("Error fetching students:", error);
@@ -99,7 +102,6 @@ const enrollInCourse = async (req, res) => {
   const { courseId } = req.body;
 
   try {
-    // Öğrenciyi ve dersi bul
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -110,14 +112,22 @@ const enrollInCourse = async (req, res) => {
       return res.status(404).json({ message: "Course not found" });
     }
 
-    // Öğrenci zaten kayıtlı mı?
     if (student.courses.includes(courseId)) {
-      return res.status(400).json({ message: "Student is already enrolled in this course" });
+      return res
+        .status(400)
+        .json({ message: "Student is already enrolled in this course" });
     }
 
-    // Kaydı ekle
+    // ✅ Student tarafı
     student.courses.push(courseId);
     await student.save();
+
+    // ✅ Course tarafı (EKLENEN KISIM)
+    course.students = course.students || [];
+    if (!course.students.includes(studentId)) {
+      course.students.push(studentId);
+      await course.save();
+    }
 
     return res.status(200).json({ message: "Enrollment successful", student });
   } catch (error) {
@@ -130,13 +140,18 @@ const getStudentCourses = async (req, res) => {
   const { studentId } = req.params;
 
   try {
-    const student = await Student.findById(studentId).populate(
-      "courses",
-      "courseName courseCode description"
-    );
+    const student = await Student.findById(studentId).populate({
+      path: "courses",
+      populate: {
+        path: "exams",
+        select: "examName examDate examType",
+      },
+    });
 
     if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
     }
 
     res.status(200).json({
@@ -156,7 +171,9 @@ const getExamsForStudent = async (req, res) => {
     // 1. Öğrenciyi bul ve kurslarını al
     const student = await Student.findById(studentId);
     if (!student) {
-      return res.status(404).json({ success: false, message: "Student not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
     }
 
     const courseIds = student.courses; // ObjectId[] listesi
@@ -175,7 +192,13 @@ const getExamsForStudent = async (req, res) => {
     return res.status(200).json({ success: true, exams });
   } catch (error) {
     console.error("Error fetching student exams:", error);
-    return res.status(500).json({ success: false, message: "Error fetching exams", error: error.message });
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Error fetching exams",
+        error: error.message,
+      });
   }
 };
 
@@ -183,20 +206,33 @@ const getStudentExamSubmissions = async (req, res) => {
   const { studentId } = req.params;
 
   try {
-    const submissions = await ExamSubmission.find({ student: studentId })
-      .populate({
-        path: "exam",
-        populate: {
-          path: "course",
-          select: "courseName courseCode",
-        },
-      });
+    const submissions = await ExamSubmission.find({
+      student: studentId,
+    }).populate({
+      path: "exam",
+      select: "examName examDate examType course",
+      populate: {
+        path: "course",
+        select: "courseName courseCode",
+      },
+    });
 
     res.status(200).json({ success: true, submissions });
   } catch (error) {
     console.error("Error fetching exam submissions:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch exam submissions" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch exam submissions" });
   }
 };
 
-export { getStudents, getStudentById, updateStudent, deleteStudent, enrollInCourse, getStudentCourses, getExamsForStudent, getStudentExamSubmissions};
+export {
+  getStudents,
+  getStudentById,
+  updateStudent,
+  deleteStudent,
+  enrollInCourse,
+  getStudentCourses,
+  getExamsForStudent,
+  getStudentExamSubmissions,
+};

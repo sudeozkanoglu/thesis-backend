@@ -1,5 +1,6 @@
 import Exam from "../models/examsModel.js";
 import Course from "../models/courseModel.js";
+import Notification from "../models/notificationModel.js";
 
 // Yeni sınav oluşturma
 export const addExam = async (req, res) => {
@@ -39,6 +40,20 @@ export const addExam = async (req, res) => {
       if (!updatedCourse) {
         return res.status(404).json({ success: false, message: "Associated course not found" });
       }
+
+      const notifications = updatedCourse.students.map((student) => ({
+        user: student._id,
+        role: "Student",
+        title: "New Exam Scheduled",
+        message: `${examName} exam has been added for ${new Date(
+          examDate
+        ).toLocaleDateString()}`,
+      }));
+  
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+  
   
       res.status(201).json({ success: true, message: "Exam created and added to course successfully", exam: savedExam });
     } catch (error) {
