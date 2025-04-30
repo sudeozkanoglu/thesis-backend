@@ -8,6 +8,7 @@ import studentRouter from "./routes/studentRoute.js"
 import examRouter from "./routes/examRoute.js"
 import questionRouter from "./routes/questionRoute.js"
 import notificationRouter from "./routes/notificationRoute.js"
+import ttsRouter from "./routes/ttsRoute.js"
 import 'dotenv/config' 
 
 
@@ -30,6 +31,7 @@ app.use("/api/students", studentRouter)
 app.use("/api/exams", examRouter)
 app.use("/api/questions", questionRouter)
 app.use("/api/notifications", notificationRouter)
+app.use('/api', ttsRouter);
 
 app.get("/", (req,res)=>{
     res.send("API Working")
