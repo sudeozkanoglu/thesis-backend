@@ -12,7 +12,7 @@ export const addQuestions = async (req, res) => {
 
     // Her bir soru için gerekli alanların kontrolünü yapıp, yeni soru nesnelerini hazırla
     const questionDocs = questions.map(q => {
-      const { questionText, correctAnswer, explanation } = q;
+      const { questionText, correctAnswer, explanation, language } = q;
       if (!questionText || !correctAnswer) {
         throw new Error("Missing required fields in one of the questions");
       }
@@ -20,6 +20,7 @@ export const addQuestions = async (req, res) => {
         questionText,
         correctAnswer,
         explanation: explanation || "",
+        language: language || "tr",
         exam,
       };
     });
