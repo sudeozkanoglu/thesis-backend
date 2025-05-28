@@ -214,45 +214,36 @@ const getExamsByTeacher = async (req, res) => {
   try {
     const { teacherId } = req.params;
 
-    // ✅ Step 1: Validate teacher ID
     if (!teacherId) {
       return res
         .status(400)
         .json({ success: false, message: "Teacher ID is required" });
     }
 
-    // ✅ Step 2: Find the teacher and get assigned courses
-    const teacher = await Teacher.findById(teacherId);
+    const teacher = await Teacher.findById(teacherId).populate("courses");
     if (!teacher || !teacher.courses || teacher.courses.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No courses found for this teacher" });
+      return res.status(404).json({
+        success: false,
+        message: "No courses found for this teacher",
+      });
     }
 
-    // ✅ Step 3: Find exams for those courses created by the teacher
     const exams = await Exams.find({
-      course: { $in: teacher.courses }, // Exams whose course is in teacher.courses
-      createdBy: teacherId, // Exams created by the teacher
+      course: { $in: teacher.courses.map((c) => c._id) },
+      createdBy: teacherId,
     }).populate([
       { path: "course", select: "courseName courseCode" },
       { path: "createdBy", select: "firstName lastName" },
     ]);
 
-    if (!exams || exams.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No exams found for this teacher's courses",
-      });
-    }
-
-    // ✅ Step 4: Send response
     res.status(200).json({
       success: true,
       teacher: {
         _id: teacher._id,
         name: `${teacher.firstName} ${teacher.lastName}`,
       },
-      exams,
+      courses: teacher.courses, 
+      exams, 
     });
   } catch (error) {
     console.error("Error fetching exams for teacher:", error);

@@ -10,6 +10,7 @@ const __dirname = path.dirname(__filename);
 const langMap = {
   eng: "en",
   tur: "tr",
+  deu: "de",
 };
 
 export const convertTextToSpeech = (req, res) => {

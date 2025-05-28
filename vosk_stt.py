@@ -13,7 +13,8 @@ lang = sys.argv[2] if len(sys.argv) > 2 else "tr"
 # Model yolunu belirle
 model_paths = {
     "tr": "models/vosk-model-small-tr-0.3",
-    "en": "models/vosk-model-small-en-us-0.15"
+    "en": "models/vosk-model-small-en-us-0.15",
+    "de": "models/vosk-model-small-de-0.15"
 }
 
 model_path = model_paths.get(lang)

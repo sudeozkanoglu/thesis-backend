@@ -27,6 +27,7 @@ Node.js ve Express.js kullanılarak geliştirilmiş olup, sesli komutları işle
 2. **Gerekli Linkler**
     - vosk-model-small-en-us-0.15 --> https://alphacephei.com/vosk/models --> English başlığı altında
     - vosk-model-small-tr-0.3 --> https://alphacephei.com/vosk/models --> Turkish başlığı altında
+    - vosk-model-small-de-0.15 --> https://alphacephei.com/vosk/models --> German başlığı altında
 
 ## Proje Yapısı
     thesis-backend/

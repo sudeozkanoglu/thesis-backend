@@ -1,5 +1,13 @@
+import { webcrypto } from 'crypto';
+if (!globalThis.crypto) {
+  globalThis.crypto = webcrypto;
+}
+
 import { User } from "../models/userModel.js";
 import jwt from "jsonwebtoken";
+import { SignJWT } from 'jose';
+import crypto from 'crypto';
+import { createSecretKey } from 'crypto';
 import validator from "validator";
 import bcrypt from "bcryptjs";
 
@@ -19,7 +27,15 @@ const loginUser = async (req, res) => {
       return res.json({ success: false, message: "Invalid Credentials" });
     }
 
-    const token = createToken(user._id);
+    const token = await createToken(user._id, user.userType);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
     res.json({
       success: true,
       token,
@@ -32,8 +48,20 @@ const loginUser = async (req, res) => {
   }
 };
 
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET);
+// const createToken = (id, userType) => {
+//   return jwt.sign({ id, userType }, process.env.JWT_SECRET);
+// };
+
+const createToken = async (id, userType) => {
+  const secret = createSecretKey(Buffer.from(process.env.JWT_SECRET));
+
+  const token = await new SignJWT({ id, userType })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1d')
+    .sign(secret);
+
+  return token;
 };
 
 // register user
@@ -76,7 +104,7 @@ const registerUser = async (req, res) => {
 
     // saving user to database
     const user = await newUser.save();
-    const token = createToken(user._id);
+    const token = await createToken(user._id, user.userType);
     res.json({ success: true, token });
   } catch (error) {
     console.error("Login Error:", error);
@@ -99,6 +127,16 @@ export const deleteAllUsers = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+export const logoutUser = (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  });
+
+  res.json({ success: true, message: "Logged out successfully" });
 };
 
 export { loginUser, registerUser };
