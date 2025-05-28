@@ -22,6 +22,10 @@ Node.js ve Express.js kullanılarak geliştirilmiş olup, sesli komutları işle
    python3 -m venv tts_env 
    source tts_env/bin/activate # Linux - Mac 
    tts_env/Scripts/activate  # Windows
+   pip install sentence-transformers
+   pip install vosk
+   pip install gTTs
+   brew install ffmpeg
    npm start 
 
 2. **Gerekli Linkler**
