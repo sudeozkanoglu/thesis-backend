@@ -18,6 +18,6 @@ if lang == "tr":
         "-filter:a", "atempo=1.2",  # %20 hızlandırma
         hızlı_dosya
     ])
-    print("[✔] Hızlandırılmış ses üretildi: output_fast.mp3")
+    print("Hızlandırılmış ses üretildi: output_fast.mp3")
 else:
-    print("[✔] Normal ses üretildi: output.mp3")
+    print("Normal ses üretildi: output.mp3")
